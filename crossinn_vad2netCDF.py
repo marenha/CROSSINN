@@ -17,20 +17,25 @@ import matplotlib.dates as mdates
 
 # Import modules
 path_parent = os.path.abspath('..')
-path_2NetCDF = os.path.join(path_parent,'doppler_wind_lidar_toolbox','VAD_retrievals')
-path_2NetCDF = os.path.join(path_parent,'doppler_wind_lidar_toolbox','quicklooks')
+path_2NetCDF = os.path.join(path_parent,'doppler_wind_lidar_toolbox','VAD_retrieval')
+path_quicklooks = os.path.join(path_parent,'doppler_wind_lidar_toolbox','quicklooks')
 sys.path.append(path_2NetCDF)
+sys.path.append(path_quicklooks)
 import calc_vad as calc_vad
-import plot_VAD as plot_VAD
+import plot_vad as plot_vad
 
 
 #%% path of input level0 files and level1 output directory 
 path_data = os.path.join('/mnt','crossinn','Lidar','acinn_data_publish')
 
 #%% lidar information and define time period
-lidars_str = ['SL_88','SLXR_142']
-start_str='20190704'
-end_str='20191010'
+# lidars_str = ['SL_88','SLXR_142']
+# start_str='20190704'
+# end_str='20191010'
+
+lidars_str = ['SL_88']
+start_str = '20190614'
+end_str = '20190707'
 
 
 el_deg=70.
@@ -40,10 +45,10 @@ for lidar_str in lidars_str:
     
     # specific paramters for the lidars can be defined here
     if lidar_str == 'SLXR_142':
-        lidar_id='sl88'
+        lidar_id='slxr142'
         snr_threshold=-24
     elif lidar_str == 'SL_88':
-        lidar_id='slxr142'
+        lidar_id='sl88'
         snr_threshold=-24
         
     path_lidar_in = os.path.join(path_data,'%s_data' %lidar_str,'data_corrected')
@@ -55,10 +60,6 @@ for lidar_str in lidars_str:
     for date_num in time_num_array:
         date_str=mdates.num2datestr(date_num,'%Y%m%d')
         
-        '''
-        coordiantes are taken from tiris map and are just a rough determination 
-        same is valid for height of the instrument
-        '''
         path_date = os.path.join(path_lidar_in,date_str[0:4],date_str[0:6],date_str)
         
         files_all=os.listdir(path_date)  
@@ -66,7 +67,10 @@ for lidar_str in lidars_str:
         
         if len(files_user)==0: continue
         
-        
+        '''
+        this method to find VAD PPI scans works for the CROSSINN dataset 
+        but probably not for other scan scenarios
+        '''
         files_ppi_vad=[]
         for file_temp in files_user:
             statinfo = os.stat(os.path.join(path_date,file_temp))
@@ -74,11 +78,7 @@ for lidar_str in lidars_str:
             if size_temp<1e6:
                 files_ppi_vad.append(file_temp)
                 
-        
-        files_ppi_vad_dates=[mdates.datestr2num('%s %s' %(file.split('_')[2],file.split('_')[3].split('.')[0])) for file in files_ppi_vad]
-        ind_sort=np.argsort(files_ppi_vad_dates)
-        files_ppi_vad_dates_sorted=np.array(files_ppi_vad_dates)[ind_sort]
-        files_ppi_vad_sorted=np.array(files_ppi_vad)[ind_sort]
+        files_ppi_vad_sorted=sorted(files_ppi_vad)
         dn_list=[]
         v_list,u_list,wd_list,ws_list=[],[],[],[]
         v_nf_list,u_nf_list,wd_nf_list,ws_nf_list=[],[],[],[]
@@ -140,8 +140,8 @@ for lidar_str in lidars_str:
             
                 #estimate three versions of horizontal wind 
                 u_lin_temp[gi],v_lin_temp[gi],w_lin_temp[gi],ws_lin_temp[gi],wd_lin_temp[gi],rv_fluc_temp[gi] = calc_vad.calc_vad_3d(rv_tempp[ind_nan],el_rad_temp[ind_nan],az_rad_temp[ind_nan])
-                ws_temp[gi],wd_temp[gi],u_temp[gi],v_temp[gi]=calc_vad.calc_vad_2d(rv_temp[ind_nan],az_temp[ind_nan],el_temp[ind_nan])
-                ws_nf_temp[gi],wd_nf_temp[gi],u_nf_temp[gi],v_nf_temp[gi]=calc_vad.calc_vad(rv_temp_nf[gi,:],az_temp,el_temp)
+                ws_temp[gi],wd_temp[gi],u_temp[gi],v_temp[gi]=calc_vad.calc_vad_2d(rv_tempp[ind_nan],az_temp[ind_nan],el_temp[ind_nan])
+                ws_nf_temp[gi],wd_nf_temp[gi],u_nf_temp[gi],v_nf_temp[gi]=calc_vad.calc_vad_2d(rv_temp_nf[gi,:],az_temp,el_temp)
             
             an_list.append(el_temp.size)
             snr_list.append(snr_mean_temp)
@@ -199,6 +199,7 @@ for lidar_str in lidars_str:
         # create output directory if non-existant
         if not os.path.exists(path_out):
             os.makedirs(path_out)  
+            
         file_name='%s_%s_vad.nc' %(lidar_id,mdates.num2datestr(date_num,'%Y%m%d'))
         file_path=os.path.join(path_out,file_name)
     
@@ -318,4 +319,4 @@ for lidar_str in lidars_str:
         #%% quicklook for created vad netCDF file
         z_ref = 546 #height of ground level at i-Box Kolsass station
         location = 'Kolsass, i-Box station'
-        plot_VAD.plot_VAD_day(file_path,path_lidar_plot_out,lidar_str,date_str,z_ref,location)
+        plot_vad.plot_VAD_day(file_path,path_lidar_plot_out,lidar_str,date_str,z_ref,location)

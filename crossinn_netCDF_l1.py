@@ -39,9 +39,13 @@ path_l0=os.path.join('/mnt','lidar_new','data_raw')
 path_l1=os.path.join('/mnt','crossinn','Lidar','acinn_data_publish')
 
 #%% loop through lidars and campaign period
-start_str = '20190614'
-end_str = '20191010'
-lidars_str = ['SLXR_142','SL_88']
+# start_str = '20190614'
+# end_str = '20191010'
+# lidars_str = ['SLXR_142','SL_88']
+
+start_str = '20190710'
+end_str = '20191011'
+lidars_str = ['SL_88']
 
 date_num_start,date_num_end = mdates.datestr2num(start_str),mdates.datestr2num(end_str)
 dates_num=np.arange(date_num_start,date_num_end+1,1)
@@ -52,15 +56,15 @@ for lidar_str in lidars_str: #loop through lidars
         
         #directory structure matches structure created by the StreamLine software
         path_l0_lidar_date=os.path.join(path_l0,lidar_str,'netCDF',date_str[0:4],date_str[0:6],date_str)
-        path_l1_lidar_date=os.path.join(path_l1,lidar_str,date_str[0:4],date_str[0:6],date_str)
+        path_l1_lidar_date=os.path.join(path_l1,'%s_data' %lidar_str,'data_corrected',date_str[0:4],date_str[0:6],date_str)
  
         if not os.path.exists(path_l1_lidar_date): os.makedirs(path_l1_lidar_date)
 
         if not os.path.exists(path_l0_lidar_date): continue
     
         # list of data files
-        files_all=os.listdir(path_l0_lidar_date)
-        
+        files_all=sorted(os.listdir(path_l0_lidar_date))
+
         for file in files_all:
             ds_temp=xr.open_dataset(os.path.join(path_l0_lidar_date,file))
         
@@ -81,9 +85,23 @@ for lidar_str in lidars_str: #loop through lidars
                 ds_temp.attrs['alt'] = 546+2.5 #height MSL of ground level + height of scanner AGL
                 ds_temp.attrs['description'] = 'corrected data of Halo Photonics Streamline, corrected variables: azimuth, gate_centers'
         
+            '''
+            Sometimes timesteps of the next day are assigned to the current day
+            this means that the decimal_time starts with zero again
+            this has to be considered when calculating dn_time_temp
+            '''
+            #use ffile name to estimate datenum
+            dn_file = mdates.datestr2num('%s %s' %(file.split('_')[2],file.split('_')[3]))
             
             dec_time_temp=ds_temp.decimal_time.values
             dn_time_temp=date_num+dec_time_temp/24
+            
+            # here 12 hours are used to find affected files
+            if any(np.abs((dn_time_temp-dn_file)*24) > 12):
+                dn_abs=np.abs((dn_time_temp-dn_file)*24)
+                #assign data to next day
+                dn_time_temp[dn_abs>12] = dn_time_temp[dn_abs>12]+1
+
             
             dn_time_temp_var=xr.Variable(['NUMBER_OF_RAYS'],dn_time_temp,attrs={'units': 'number of days since 0001-01-01','long_name':'start time number of each ray'})
             ds_temp=ds_temp.assign(datenum_time=dn_time_temp_var)
