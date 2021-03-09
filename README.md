@@ -10,7 +10,7 @@ Data processing scripts for Doppler wind lidar data collected in the framework o
 ## crossinn_vad2netCDF.py
 
 
-## Literatur
+## References
 
 Adler, B., A. Gohm, N. Kalthoff, N. Babić, U. Corsmeier, M. Lehner, M. W. Rotach, M. Haid, P. Markmann, E. Gast, G. Tsaknakis, G. Georgoussis, 2021a: CROSSINN: A Field Experiment to Study the Three-Dimensional Flow Structure in the Inn Valley, Austria. Bulletin of the American Meteorological Society, 102, E38-E60, https://doi.org/10.1175/BAMS-D-19-0283.1
 
