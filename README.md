@@ -11,3 +11,13 @@ Data processing scripts for Doppler wind lidar data collected in the framework o
 
 
 ## Literatur
+
+Adler, B., A. Gohm, N. Kalthoff, N. Babić, U. Corsmeier, M. Lehner, M. W. Rotach, M. Haid, P. Markmann, E. Gast, G. Tsaknakis, G. Georgoussis, 2021a: CROSSINN: A Field Experiment to Study the Three-Dimensional Flow Structure in the Inn Valley, Austria. Bulletin of the American Meteorological Society, 102, E38-E60, https://doi.org/10.1175/BAMS-D-19-0283.1
+
+Adler, B., N. Babić, N. Kalthoff, A. Wieser, 2021b: CROSSINN (Cross-valley flow in the Inn Valley investigated by dual-Doppler lidar measurements) - KITcube data sets [WLS200s]. Data set. KITopen. https://doi.org/10.5445/IR/1000127847
+
+Adler, B., N. Babić, N. Kalthoff, A. Wieser, 2021c: CROSSINN (Cross-valley flow in the Inn Valley investigated by dual-Doppler lidar measurements) - KITcube data sets [CHM 15k, GRAW, HATPRO2, Mobotix, Photos]. Data set. KITopen. https://doi.org/10.5445/IR/1000127577
+
+Adler, B., N. Babić, N. Kalthoff, U. Corsmeier, C. Kottmeier, C. Mallaun, 2021d: CROSSINN (Cross-valley flow in the Inn Valley investigated by dual-Doppler lidar measurements) - Aircraft data set [FDLR]. Data set. KITopen. https://doi.org/10.5445/IR/1000127862
+
+Ladstätter, P. J., 2020: Vertical structure of the atmospheric boundary layer in the Inn Valley during CROSSINN. Master's thesis, University of Innsbruck, 114 pp. https://resolver.obvsg.at/urn:nbn:at:at-ubi:1-68131
