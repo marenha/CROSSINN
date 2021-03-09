@@ -39,13 +39,9 @@ path_l0=os.path.join('/mnt','lidar_new','data_raw')
 path_l1=os.path.join('/mnt','crossinn','Lidar','acinn_data_publish')
 
 #%% loop through lidars and campaign period
-# start_str = '20190614'
-# end_str = '20191010'
-# lidars_str = ['SLXR_142','SL_88']
-
-start_str = '20190710'
-end_str = '20191011'
-lidars_str = ['SL_88']
+start_str = '20190614'
+end_str = '20191010'
+lidars_str = ['SLXR_142','SL_88']
 
 date_num_start,date_num_end = mdates.datestr2num(start_str),mdates.datestr2num(end_str)
 dates_num=np.arange(date_num_start,date_num_end+1,1)

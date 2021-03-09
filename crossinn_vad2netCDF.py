@@ -10,7 +10,6 @@ them into daily files: [lidar_str]_vad_yyyymmdd.nc
 import os,sys
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 from datetime import date
 import matplotlib.dates as mdates
@@ -29,13 +28,9 @@ import plot_vad as plot_vad
 path_data = os.path.join('/mnt','crossinn','Lidar','acinn_data_publish')
 
 #%% lidar information and define time period
-# lidars_str = ['SL_88','SLXR_142']
-# start_str='20190704'
-# end_str='20191010'
-
-lidars_str = ['SL_88']
-start_str = '20190614'
-end_str = '20190707'
+lidars_str = ['SL_88','SLXR_142']
+start_str='20190614'
+end_str='20191010'
 
 
 el_deg=70.
@@ -105,6 +100,10 @@ for lidar_str in lidars_str:
                 alt=data_temp.alt
                 
                 range_gate_length=data_temp.range_gate_length
+                
+            # TODO: User5_142_20190801_113000_l1.nc had only 0 as azimuth angle
+            if np.unique(az_temp).size < 5:
+                continue
               
             #%% Apply filter to measured data 
             '''
