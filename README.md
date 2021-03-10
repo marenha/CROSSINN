@@ -11,7 +11,8 @@ During the campaign, conical PPI scans at an elevation angle of 70 deg were perf
 **To create these quicklooks, the `quiver.py` module of `matplotlib` (matplotlib/matplotlib) was modified**
 
 ## `crossinn_write_dss.py`
-
+Creating a daily scan schedule (dss) and the involved scan files for a certain scan scenario. 
+To perform different scan patterns, the StreamLine software needs .txt files containing the information about the scan pattern. For CROSSINN, these scan files were created with `write_scan_file.py` (marenha/doppler_wind_lidar_toolbox/SL_scan_files). The daily scan schedule starts the involved scan files at a certain time of the day. 
 
 ## References
 
