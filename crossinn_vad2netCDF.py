@@ -113,6 +113,13 @@ for lidar_str in lidars_str: #loop through lidars
                 
                 el_deg = np.unique(el_temp)
                 
+                '''
+                since for csm scans the start azimuth angle is stored, the azimuth 
+                angle has to be corrected
+                '''
+                az_delta = np.median(np.diff(az_temp))
+                az_temp = az_temp + az_delta/2
+                
                 # code online works for PPI scans at a constant elevation angle
                 if len(el_deg) > 1 : continue
                 
