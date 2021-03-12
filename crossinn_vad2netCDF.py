@@ -111,17 +111,11 @@ for lidar_str in lidars_str: #loop through lidars
                 az_temp=data_temp.azimuth.values
                 el_temp=data_temp.elevation.values
                 
-                el_deg = np.unique(el_temp)
-                
-                '''
-                since for csm scans the start azimuth angle is stored, the azimuth 
-                angle has to be corrected
-                '''
-                az_delta = np.median(np.diff(az_temp))
-                az_temp = az_temp + az_delta/2
+                el_deg = np.unique(np.round(el_temp))
                 
                 # code online works for PPI scans at a constant elevation angle
                 if len(el_deg) > 1 : continue
+                
                 
                 gz_temp=data_temp.gate_centers.values*np.sin(np.deg2rad(el_deg))
                 snr_temp=data_temp.intensity.values-1
@@ -162,6 +156,14 @@ for lidar_str in lidars_str: #loop through lidars
             rv_fluc_temp = np.full(gn,np.nan)
             ws_temp,wd_temp,u_temp,v_temp = np.full(gn,np.nan),np.full(gn,np.nan),np.full(gn,np.nan),np.full(gn,np.nan)
             ws_nf_temp,wd_nf_temp,u_nf_temp,v_nf_temp = np.full(gn,np.nan),np.full(gn,np.nan),np.full(gn,np.nan),np.full(gn,np.nan)
+            
+            
+            '''
+            since for csm scans the start azimuth angle is stored, the azimuth 
+            angle has to be corrected to the centre of the angle sector
+            '''
+            az_delta = np.median(np.diff(az_temp))
+            az_temp = az_temp + az_delta/2
             
             az_rad_temp,el_rad_temp=np.deg2rad(az_temp),np.deg2rad(el_temp)
             for gi in range(gn):
@@ -352,3 +354,5 @@ for lidar_str in lidars_str: #loop through lidars
         z_ref = 546 #height of ground level at i-Box Kolsass station
         location = 'Kolsass, i-Box station'
         plot_vad.plot_VAD_day(file_path,path_lidar_plot_out,lidar_str,date_str,z_ref,location)
+
+
