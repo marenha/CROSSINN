@@ -2,19 +2,20 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Oct 30 11:40:08 2019
-Estimate vertical profiles of horizontal wind from corrected data measured 
-during the CROSSINN measurement campaign. During the campaign conical PPI scans
-at 70 deg were performed for the SL_88 and SLXR_142 lidars. 
-Wind profiles are collected for one day and stored in daily .nc files.
-Additionally quicklooks of the retrieved data are created. 
+Estimate vertical profiles of horizontal wind from corrected data (*_l1.nc) 
+measured during the CROSSINN measurement campaign. During the campaign regular  
+conical PPI scans an elevation angle of 70 deg (PPI70) were performed for the SL_88 
+and SLXR_142 lidars. For each PPI70 scan, one vertical profile is estimated. 
+These wind profiles are collected for one day and stored into daily .nc files.
+Additionally, quicklooks of the retrieved data are created. 
 Used directories:
     path_lidar_in           - input directory of *_l1.nc files; structure: path_lidar_in/yyyy/yyyymm/yyyymmdd/*_l1.nc
-    path_lidar_out          - output directory of retrieved wind profiles: path_lidar_in/yyyy/yyyymmdd/*_vad.nc
+    path_lidar_out          - output directory of retrieved wind profiles: path_lidar_out/yyyy/yyyymmdd/*_vad.nc
     path_lidar_plot_out     - output directory of figures depicting the produced data: path_lidar_plot_out/*_vad.png
 
 Corrected .nc data files are created with crossinn_netCDF_l1.py
 
-To run this code, the module calc_vad.py and plot_vad.py are required. 
+To run this code, the modules calc_vad.py and plot_vad.py are required. 
 They can be found in the GITHub repositories:
     marenha/VAD_retrieval
     marenha/doppler_wind_lidar_toolbox/quicklooks
@@ -48,8 +49,8 @@ lidars_str = ['SL_88','SLXR_142']
 start_str = '20190614'
 end_str = '20191010'
 
-dtn = 24*60*60
-for lidar_str in lidars_str: #loop through lidars
+dtn = 24*60*60 #second per day
+for lidar_str in lidars_str: #loop lidars
     
     # specific paramters for the lidars can be defined here
     if lidar_str == 'SLXR_142':
@@ -64,10 +65,10 @@ for lidar_str in lidars_str: #loop through lidars
     path_lidar_out = os.path.join(path_data,'%s_data' %lidar_str,'data_products','VAD')
     path_lidar_plot_out = os.path.join(path_data,'%s_quicklooks' %lidar_str,'VAD')
     
-    # create time array containing each day
+    # time array containing each day
     start_num,end_num = mdates.datestr2num(start_str),mdates.datestr2num(end_str)
     time_num_array = np.arange(start_num,end_num+1,1)
-    for date_num in time_num_array: #loop through days
+    for date_num in time_num_array: #loop days
         date_str=mdates.num2datestr(date_num,'%Y%m%d')
         
         path_date = os.path.join(path_lidar_in,date_str[0:4],date_str[0:6],date_str)
@@ -77,11 +78,13 @@ for lidar_str in lidars_str: #loop through lidars
         # Only "User" files contain PPI scans
         files_user=[file for file in files_all if 'User' in file]
         
+        # if no User file is available, no PPI scan was performed for this day
         if len(files_user) == 0: continue
         
+        #%% Find files containing VAD PPI scans
         '''
-        this method to find VAD PPI scans works for the CROSSINN dataset 
-        but probably not for other scan scenarios
+        Find VAD PPI scans based on file size. This method only works for the 
+        CROSSINN dataset and has to be adapted for other scan scenarios
         '''
         files_ppi_vad=[]
         for file_temp in files_user:
@@ -93,16 +96,23 @@ for lidar_str in lidars_str: #loop through lidars
         # sort VAD PPI scans by time
         files_ppi_vad_sorted=sorted(files_ppi_vad)
         
-        # collect all retrieved data in lists 
-        dn_list=[]
-        v_list,u_list,wd_list,ws_list = [],[],[],[]
-        v_nf_list,u_nf_list,wd_nf_list,ws_nf_list = [],[],[],[]
+        #%% collect all retrieved data in lists 
+        '''
+        Three types of vertical profiles are estimated :
+            - Estimation of (u,v) assuming vertical veclocity w = 0 for filtered data: v_list,u_list,wd_list,ws_list
+            - Estimation of (u,v) assuming vertical veclocity w = 0 for unfiltered data: v_nf_list,u_nf_list,wd_nf_list,ws_nf_list
+            - Estimation of (u,v,w) by solving overdetermined system of linear equations: v_lin_list,u_lin_list,w_lin_list,wd_lin_list,ws_lin_list ,rv_fluc_list
+        '''
+        dn_list=[] # dn - mdates.datenum
+        v_list,u_list,wd_list,ws_list = [],[],[],[] # (u,v) - 2D wind vector, wd - wind direction, ws - wind speed
+        v_nf_list,u_nf_list,wd_nf_list,ws_nf_list = [],[],[],[] # nf - no filter
         v_lin_list,u_lin_list,w_lin_list,wd_lin_list,ws_lin_list = [],[],[],[],[]
-        rv_fluc_list = []
-        snr_list = []
-        an_list = []
-        for file_temp in files_ppi_vad_sorted: # go through files for one day
+        rv_fluc_list = [] # deviation of radial velocity from homogenous wind (u,v,w)
+        snr_list = [] # averaged signal-to-noise ratio for each range gate
+        an_list = [] # number of involved azimuth angles for each range gate
+        for file_temp in files_ppi_vad_sorted: # loop PPI70 files
     
+            #%% Import corrected data and extract necessary variables
             with xr.open_dataset(os.path.join(path_date,file_temp),decode_times=False) as data_temp:
             
                 dn_temp=data_temp.datenum_time.values
@@ -164,9 +174,9 @@ for lidar_str in lidars_str: #loop through lidars
             '''
             az_delta = np.median(np.diff(az_temp))
             az_temp = az_temp + az_delta/2
-            
             az_rad_temp,el_rad_temp=np.deg2rad(az_temp),np.deg2rad(el_temp)
-            for gi in range(gn):
+            
+            for gi in range(gn): # loop range gates
                 rv_tempp = rv_temp[gi,:]
                 ind_nan = np.where(~np.isnan(rv_tempp))[0]
     
@@ -178,10 +188,10 @@ for lidar_str in lidars_str: #loop through lidars
                 ws_temp[gi],wd_temp[gi],u_temp[gi],v_temp[gi] = calc_vad.calc_vad_2d(rv_tempp[ind_nan],az_temp[ind_nan],el_temp[ind_nan])
                 ws_nf_temp[gi],wd_nf_temp[gi],u_nf_temp[gi],v_nf_temp[gi] = calc_vad.calc_vad_2d(rv_temp_nf[gi,:],az_temp,el_temp)
             
+            #%% collect data in list 
             an_list.append(el_temp.size)
             snr_list.append(snr_mean_temp)
-            
-            # colltect each profile in list 
+
             dn_list.append(dn_temp[0])
             v_list.append(v_temp)
             u_list.append(u_temp)
@@ -203,7 +213,7 @@ for lidar_str in lidars_str: #loop through lidars
         
             az_temp[az_temp>360] = az_temp[az_temp>360]-360
         
-        #create matrices out of the lists
+        #%% create matrices out of the lists
         dn = np.array(dn_list)
         u = np.vstack(u_list).T
         v = np.vstack(v_list).T
@@ -229,18 +239,18 @@ for lidar_str in lidars_str: #loop through lidars
         datenum_array = dn
         tn = datenum_array.shape[0]
             
-        #%% Create netCDF file containing hroizontal wind 
+        #%% Create netCDF file containing horizontal wind 
+        # TODO: add this part as module to marenha/doppler_wind_lidar_toolbox/2NetCDF
         
         path_out = os.path.join(path_lidar_out,date_str[0:4],date_str[0:6])
         # create output directory if non-existant
-        if not os.path.exists(path_out):
-            os.makedirs(path_out)  
+        if not os.path.exists(path_out): os.makedirs(path_out)  
             
         file_name='%s_%s_vad.nc' %(lidar_id,mdates.num2datestr(date_num,'%Y%m%d'))
         file_path=os.path.join(path_out,file_name)
     
-        if os.path.isfile(file_path):
-            os.remove(file_path)
+        # overrite already existing file
+        if os.path.isfile(file_path): os.remove(file_path)
         
         dataset_temp=Dataset(file_path,'w',format ='NETCDF4')
         # define dimensions
