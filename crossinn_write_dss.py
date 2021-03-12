@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Sep 21 10:08:33 2018
-Write scan schedule for Halo Phonotics StreamLine software
-+ write scan pattern called in the scan schedule
+Write daily scan schedule (dss) for CROSSINN scan scenario and create involved
+scan pattern
 
-To run this code, the module write_scan_file.py is required. 
+Here, the module write_scan_file.py is required. 
 It can be found in the GITHub repositories:
     marenha/doppler_wind_lidar_toolbox/write_scan_file
 @author: maren
 """
 import sys
 import os
-import numpy as np
+# import numpy as np
 import pandas as pd
 import datetime as dt
 
